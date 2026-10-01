@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Two-token colour system + two accents.
+
+   Background and label are one RGB triplet each plus opacity: every grey tier
+   is the same triplet at a different alpha, so there is no way to invent a
+   seventh grey. On top sit exactly two accents, magenta and turquoise, bound to
+   the green oasis imagery through glow overlays so the palette reads as one.
+   --------------------------------------------------------------------------- */
+:root {
+  --bg-triplet: 11, 13, 12;        /* #0B0D0C near-black */
+  --label-triplet: 244, 243, 238;  /* #F4F3EE warm off-white, deliberately not #fff */
+  --magenta-triplet: 245, 32, 139; /* #F5208B */
+  --turq-triplet: 31, 227, 196;    /* #1FE3C4 */
+}
+
+/* Light mode swaps the two greys. Both accents keep their hue but the light
+   theme darkens them for AA contrast on the off-white ground. */
+:root[data-theme="light"] {
+  --bg-triplet: 244, 243, 238;
+  --label-triplet: 11, 13, 12;
+  --magenta-triplet: 176, 20, 96;
+  --turq-triplet: 14, 122, 107;
+}
+
+@theme {
+  --color-bg: rgb(var(--bg-triplet));
+  --color-elevated: rgba(var(--label-triplet), 0.04);
+  --color-line: rgba(var(--label-triplet), 0.12);
+
+  --color-label: rgba(var(--label-triplet), 1);
+  --color-label-2: rgba(var(--label-triplet), 0.72);
+  --color-label-3: rgba(var(--label-triplet), 0.44);
+  --color-label-4: rgba(var(--label-triplet), 0.24);
+
+  --color-magenta: rgb(var(--magenta-triplet));
+  --color-turq: rgb(var(--turq-triplet));
+  --color-accent: rgb(var(--turq-triplet)); /* turquoise is the default single accent */
+
+  --font-sans: "Satoshi", system-ui, sans-serif;
+  --font-display: "Cabinet Grotesk", "Satoshi", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+}
+
+/* Self-hosted fonts (DSGVO: no third-party font request, no visitor IP leaves for
+   a font CDN — this is what the privacy page states). Display + body are self-hosted
+   woff2; the mono tier uses the OS monospace stack, so no font file ships for it. */
+@font-face {
+  font-family: "Cabinet Grotesk"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/fonts/cabinetgrotesk-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cabinet Grotesk"; font-style: normal; font-weight: 800; font-display: swap;
+  src: url("/fonts/cabinetgrotesk-800.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Satoshi"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/satoshi-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Satoshi"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/fonts/satoshi-500.woff2") format("woff2");
+}
+
+/* Lenis smooth-scroll base styles (self-hosted lib, no CDN).
+   Smoothing only: no pinning, no scrub, natural scroll length preserved. */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* mobile: kill horizontal overflow (rotated marquee + wide grids broke mobile) */
+html, body { max-width: 100%; overflow-x: hidden; }
+
+body {
+  background: var(--color-bg);
+  color: var(--color-label);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* The mono tier carries every section label and depth marker. Scale contrast is
+   the design: large display type against 0.72rem mono, with almost nothing between. */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hero shimmer: a slow sheen crossing the pool. Compositor-only.
+   CSS approximation of moving water light; a WebGL displacement shader is the upgrade. */
+.hero-shimmer {
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(var(--turq-triplet), 0.10) 46%,
+    rgba(var(--magenta-triplet), 0.08) 52%,
+    transparent 68%
+  );
+  background-size: 300% 300%;
+  mix-blend-mode: screen;
+  animation: hero-sheen 9s ease-in-out infinite;
+  will-change: background-position, opacity;
+}
+@keyframes hero-sheen {
+  0%   { background-position: 0% 50%; opacity: 0.5; }
+  50%  { background-position: 100% 50%; opacity: 0.9; }
+  100% { background-position: 0% 50%; opacity: 0.5; }
+}
+
+.hero-scroll-cue { transform-origin: top; animation: hero-cue 2.2s ease-in-out infinite; }
+@keyframes hero-cue {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+  50%      { transform: scaleY(1);   opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-shimmer, .hero-scroll-cue { animation: none; }
+}
+
+::selection { background: rgba(var(--turq-triplet), 0.3); }
+
+/* Visible focus ring for keyboard navigation. */
+:focus-visible {
+  outline: 2px solid rgb(var(--turq-triplet));
+  outline-offset: 3px;
+}
+
+/* Reveal failsafe: if JavaScript never runs, content must still be readable.
+   Elements start visible and are only hidden once JS marks the document ready. */
+[data-reveal] { opacity: 1; transform: none; }
+html[data-js="ready"] [data-reveal] { opacity: 0; transform: translateY(1.25rem); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  html[data-js="ready"] [data-reveal] { opacity: 1; transform: none; }
+}
